@@ -5,3 +5,4 @@ VirtualOS.bin: VirtualOS.asm
 	
 clean:
 	rm -f VirtualOS.bin
+	

@@ -2,6 +2,8 @@
 
 // 함수 선언
 void kPrintString( int iX, int iY, const char* pcString );
+BOOL kIntializeKernel64Area( void );
+BOOL kIsMemoryEnough( void );
 
 /**
  *  아래 함수는 C 언어 커널의 시작 부분임
@@ -9,7 +11,34 @@ void kPrintString( int iX, int iY, const char* pcString );
  */
 void Main( void )
 {
-	kPrintString(0, 3, "C Language Kernel Start!!!!");
+	DWORD i;
+
+	kPrintString(0, 3, "C Language Kernel Start --------------------[PASS]");
+
+	// 최소 메모리 크기를 확인
+	kPrintString(0, 4, "Minimum Memory Size Check ------------------[    ]");
+	if( kIsMemoryEnough() == FALSE )
+	{
+		kPrintString(45, 4, "FAIL");
+		kPrintString(0, 5, "Not Enough Memory~!! OS requires Over 64Mbyte Memory.");
+
+		while(1);
+	}
+	else
+	{
+		kPrintString(45, 4, "PASS");
+	}
+
+	// IA-32e 모드의 커널 영역을 초기화
+	kPrintString(0, 5, "IA-32e Kernel Area Initialize --------------[    ]");
+	if(kIntializeKernel64Area() == FALSE)
+	{
+		kPrintString(0, 5, "FAIL");
+		kPrintString(0, 6, "Kernel Area Initialization Fail");
+		while(1);
+	}
+
+	kPrintString(45, 5, "PASS");
 
     while( 1 ) ;
 }
@@ -30,4 +59,54 @@ void kPrintString( int iX, int iY, const char* pcString )
     {
         pstScreen[ i ].bCharactor = pcString[ i ];
     }
+}
+
+// IA-32e mode Kernel initialize to 0
+BOOL kIntializeKernel64Area()
+{
+	DWORD* pdwCurrentAddress;
+
+	// 초기화을 시작할 어드레스 0x100000(1MB)을 설정
+	pdwCurrentAddress = (DWORD*) 0x100000;
+
+	// 마지막 어드레스인 0x600000까지 루프를 돌면서 4바이트씩 0으로 채움
+	while( ( DWORD ) pdwCurrentAddress < 0x600000 )
+	{
+		*pdwCurrentAddress = 0x00;
+
+		// 0으로 저장한 후 다시 읽었을 때 0이 나오지 않으면 해당 어드레스를
+		// 사용하는데 문제가 생긴것으로 종료
+		if ( *pdwCurrentAddress != 0)
+		{
+			return FALSE;
+		}
+
+		// 다음 주소로 이동
+		pdwCurrentAddress++;
+	}
+
+	return TRUE;
+}
+
+// OS를 실행하기에 충분한 메모리를 가지고 있는지 확인
+BOOL kIsMemoryEnough(void)
+{
+	DWORD* pwdCurrentAddress;
+
+	pwdCurrentAddress = (DWORD*) 0x100000;
+
+	while((DWORD) pwdCurrentAddress < 0x4000000)
+	{
+		*pwdCurrentAddress = 0x12345678;
+
+		if(*pwdCurrentAddress != 0x12345678)
+		{
+			return FALSE;
+		}
+
+		// 1MB씩 이동하면서 확인
+		pwdCurrentAddress += (0x100000 / 4);
+	}
+
+	return TRUE;
 }

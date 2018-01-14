@@ -12,21 +12,42 @@ START:
     mov ds, ax      ; DS 세그먼트 레지스터에 설정
     mov es, ax      ; ES 세그먼트 레지스터에 설정
     
-    cli             ; 인터럽트가 발생하지 못하도록 설정
-    lgdt [ GDTR ]   ; GDTR 자료구조를 프로세서에 설정하여 GDT 테이블을 로드
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; 보호모드로 진입
-    ; Disable Paging, Disable Cache, Internal FPU, Disable Align Check, 
-    ; Enable ProtectedMode
+    ; A20 게이트를 활성화
+    ; BIOS를 이용한 전환이 실패 했을때 시스템 컨트롤 포트로 전환 시도
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    mov eax, 0x4000003B ; PG=0, CD=1, NW=0, AM=0, WP=0, NE=1, ET=1, TS=1, EM=0, MP=1, PE=1
-    mov cr0, eax        ; CR0 컨트롤 레지스터에 위에서 저장한 플래그를 설정하여 
-                        ; 보호 모드로 전환
+    ; BIOS 서비스를 이용한 A20 게이트를 활성화
+	mov ax, 0x2401	; A20 게이트 활성화 서비스 설정
+	int 0x15		; BIOS interrupt 호출
 
-    ; 커널 코드 세그먼트를 0x00을 기준으로 하는 것으로 교체하고 EIP의 값을 0x00을 기준으로 재설정
-    ; CS 세그먼트 셀렉터 : EIP
-    jmp dword 0x08: ( PROTECTEDMODE - $$ + 0x10000 )
+	jc .A20GATEERROR	; check if success or fail
+	jmp .A20GATESUCCESS
+
+	; 에러 발상으로 시스템 컨트롤 포트로 전환
+	.A20GATEERROR:
+		in al, 0x92		; 시스템 컨트롤 포트(0x92)에서 1 바이트를 읽어 레지스터에 저장
+		or al, 0x02		; 읽은 값에 A20 게이트 비트(활성화는 비트 1이 1)를 1로 설정
+		and al, 0xFE	; 시스템 리셋 방지를 위한 0xFE와 AND 연산하여 비트 0를 0으로 설정
+		out 0x92, al	; 시스템 컨트롤 포트에 변경된 값을 저장
+
+	.A20GATESUCCESS:
+
+   		cli             ; 인터럽트가 발생하지 못하도록 설정
+    	lgdt [ GDTR ]   ; GDTR 자료구조를 프로세서에 설정하여 GDT 테이블을 로드
+
+    	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    	; 보호모드로 진입
+    	; Disable Paging, Disable Cache, Internal FPU, Disable Align Check,
+    	; Enable ProtectedMode
+    	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    	mov eax, 0x4000003B ; PG=0, CD=1, NW=0, AM=0, WP=0, NE=1, ET=1, TS=1, EM=0, MP=1, PE=1
+    	mov cr0, eax        ; CR0 컨트롤 레지스터에 위에서 저장한 플래그를 설정하여
+         	                ; 보호 모드로 전환
+
+    	; 커널 코드 세그먼트를 0x00을 기준으로 하는 것으로 교체하고 EIP의 값을 0x00을 기준으로 재설정
+    	; CS 세그먼트 셀렉터 : EIP
+    	jmp dword 0x08: ( PROTECTEDMODE - $$ + 0x10000 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

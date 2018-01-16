@@ -2,3 +2,5 @@
 *.cproject
 *.img
 *.bin
+
+01.Kernel32/Temp/*

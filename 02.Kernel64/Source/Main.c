@@ -1,4 +1,5 @@
 #include "Types.h"
+#include "Keyboard.h"
 
 void kPrintString( int iX, int iY, const char* pcString );
 
@@ -7,8 +8,41 @@ void kPrintString( int iX, int iY, const char* pcString );
  */
 void Main( void )
 {
+	char vcTemp[2] = {0, };
+	BYTE bFlags;
+	BYTE bTemp;
+	int i = 0;
+
 	kPrintString(0, 10, "Switch To IA-32e Mode Success~!!");
 	kPrintString(0, 11, "IA-32e C Language Kernel Start -------------[PASS]");
+	kPrintString(0, 12, "Keyboard Activate --------------------------[    ]");
+
+	// 키보드 활성화
+	if(kActivateKeyboard() == TRUE) {
+		kPrintString(45, 12, "PASS");
+		kChangeKeyboardLED(FALSE, FALSE, FALSE);
+	}
+	else {
+		kPrintString(45, 12, "FAIL");
+		while(1);
+	}
+
+	while(1) {
+		// 출력 버퍼(포트 0x60)가 차 있으면 스캔 코드를 읽을 수 있음
+		if(kIsOutputBufferFull() == TRUE) {
+			// 출력 버퍼에서 스캔 코드를 읽어서 저장
+			bTemp = kGetKeyboardScanCode();
+
+			// 스캔 코드를 아스키 코드로 변환하는 함수를 호출하여 아스키 코드와
+			// 눌림 또는 떨어짐 정보를 반환
+			if(kConvertScanCodeToASCIICode(bTemp, &(vcTemp[0]), &bFlags) == TRUE) {
+
+				if(bFlags & KEY_FLAGS_DOWN) {
+					kPrintString(i++, 13, vcTemp);
+				}
+			}
+		}
+	}
 }
 
 void kPrintString( int iX, int iY, const char* pcString )

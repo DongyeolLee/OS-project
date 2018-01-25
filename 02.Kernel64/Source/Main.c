@@ -1,6 +1,7 @@
 #include "Types.h"
 #include "Keyboard.h"
 #include "Descriptor.h"
+#include "PIC.h"
 
 void kPrintString( int iX, int iY, const char* pcString );
 
@@ -42,6 +43,13 @@ void Main( void )
 		while(1);
 	}
 
+	kPrintString(0, 16, "PIC Controller And Interrupt Initialize ----[    ]");
+	// PIC 컨트롤러 초기화 및 모든 인터럽트 활성화
+	kInitializePIC();
+	kMaskPICInterrupt( 0 );
+	kEnableInterrupt();
+	kPrintString(45, 16, "PASS");
+
 	while(1) {
 		// 출력 버퍼(포트 0x60)가 차 있으면 스캔 코드를 읽을 수 있음
 		if(kIsOutputBufferFull() == TRUE) {
@@ -53,7 +61,7 @@ void Main( void )
 			if(kConvertScanCodeToASCIICode(bTemp, &(vcTemp[0]), &bFlags) == TRUE) {
 
 				if(bFlags & KEY_FLAGS_DOWN) {
-					kPrintString(i++, 16, vcTemp);
+					kPrintString(i++, 17, vcTemp);
 
 					if(vcTemp[0] == '0') {
 						bTemp = bTemp / 0;

@@ -60,7 +60,7 @@
 
 // 키 큐에 대한 매크로
 // 키 큐의 최대 크기
-#define KEY_MAXQUEUECOUNT	100
+#define KEY_MAXQUEUECOUNT   100
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -98,11 +98,11 @@ typedef struct kKeyboardManagerStruct
 typedef struct kKeyDataStruct
 {
     // 키보드에서 전달된 스캔 코드
-	BYTE bScanCode;
+    BYTE bScanCode;
     // 스캔 코드를 변환한 ASCII 코드
-	BYTE bASCIICode;
+    BYTE bASCIICode;
     // 키 상태를 저장하는 플래그(눌림/떨어짐/확장 키 여부)
-	BYTE bFlags;
+    BYTE bFlags;
 } KEYDATA;
 
 #pragma pack( pop )

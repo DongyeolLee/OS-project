@@ -11,3 +11,5 @@
 - 키보드 디바이스 드라이버를 추가하자 - (https://dongyeollee.github.io/2018/01/21/AddKeyboardDriver/)
 - GDT, IDT 테이블, TSS 세그먼트를 추가해 인터럽트에 대비하자 - (https://dongyeollee.github.io/2018/01/23/PrepareForInterrupt/)
 - PIC 컨트롤러와 인터럽트 핸들러를 이용해 인터럽트를 처리하자 - (https://dongyeollee.github.io/2018/01/27/PIC-controllerAndInterruptHandler/)
+- 키보드 디바이스 드라이버를 업그레이드하자 - (https://dongyeollee.github.io/2018/01/30/UpgradeKeyboardDeviceDriver/)
+- 콘솔 셸을 만들자 - (https://dongyeollee.github.io/2018/01/31/MakeAConsoleShell/)

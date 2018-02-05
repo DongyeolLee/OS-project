@@ -15,11 +15,11 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] =
         { "strtod", "String To Decial/Hex Convert", kStringToDecimalHexTest },
         { "shutdown", "Shutdown And Reboot OS", kShutdown },
         { "settimer", "Set PIT Controller Counter0, ex)settimer 10(ms) 1(periodic)", kSetTimer },
-		{ "wait", "Wait ms Using PIT, ex)wait 100(ms)", kWaitUsingPIT },
-		{ "rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter },
-		{ "cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed },
-		{ "date", "Show Date And Time", kShowDateAndTime },
-		{ "createtask", "Create Task", kCreateTestTask},
+        { "wait", "Wait ms Using PIT, ex)wait 100(ms)", kWaitUsingPIT },
+        { "rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter },
+        { "cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed },
+        { "date", "Show Date And Time", kShowDateAndTime },
+        { "createtask", "Create Task, ex)createtask 1(type) 10(count)", kCreateTestTask },
 };                                     
 
 //==============================================================================
@@ -194,10 +194,9 @@ void kHelp( const char* pcCommandBuffer )
     int iCursorX, iCursorY;
     int iLength, iMaxCommandLength = 0;
     
-    
     kPrintf( "=======================================================\n" );
-    kPrintf( "                   DY_OS Shell Help                    \n" );
-    kPrintf( "=======================================================\n" );
+	kPrintf( "                   DY_OS Shell Help                    \n" );
+	kPrintf( "=======================================================\n" );
     
     iCount = sizeof( gs_vstCommandTable ) / sizeof( SHELLCOMMANDENTRY );
 
@@ -297,7 +296,9 @@ void kShutdown( const char* pcParamegerBuffer )
     kReboot();
 }
 
-// PIT 컨트롤러의 카운터 0 설정
+/**
+ *  PIT 컨트롤러의 카운터 0 설정
+ */
 void kSetTimer( const char* pcParameterBuffer )
 {
     char vcParameter[ 100 ];
@@ -307,7 +308,7 @@ void kSetTimer( const char* pcParameterBuffer )
 
     // 파라미터 초기화
     kInitializeParameter( &stList, pcParameterBuffer );
-
+    
     // milisecond 추출
     if( kGetNextParameter( &stList, vcParameter ) == 0 )
     {
@@ -321,19 +322,16 @@ void kSetTimer( const char* pcParameterBuffer )
     {
         kPrintf( "ex)settimer 10(ms) 1(periodic)\n" );
         return ;
-    }
+    }    
     bPeriodic = kAToI( vcParameter, 10 );
-
+    
     kInitializePIT( MSTOCOUNT( lValue ), bPeriodic );
     kPrintf( "Time = %d ms, Periodic = %d Change Complete\n", lValue, bPeriodic );
 }
 
 /**
-
- *  PIT 컨트롤러를 직접 사용하여 ms 동안 대기
-
+ *  PIT 컨트롤러를 직접 사용하여 ms 동안 대기  
  */
-
 void kWaitUsingPIT( const char* pcParameterBuffer )
 {
     char vcParameter[ 100 ];
@@ -341,7 +339,7 @@ void kWaitUsingPIT( const char* pcParameterBuffer )
     PARAMETERLIST stList;
     long lMillisecond;
     int i;
-
+    
     // 파라미터 초기화
     kInitializeParameter( &stList, pcParameterBuffer );
     if( kGetNextParameter( &stList, vcParameter ) == 0 )
@@ -349,55 +347,47 @@ void kWaitUsingPIT( const char* pcParameterBuffer )
         kPrintf( "ex)wait 100(ms)\n" );
         return ;
     }
-
+    
     lMillisecond = kAToI( pcParameterBuffer, 10 );
     kPrintf( "%d ms Sleep Start...\n", lMillisecond );
-
+    
     // 인터럽트를 비활성화하고 PIT 컨트롤러를 통해 직접 시간을 측정
     kDisableInterrupt();
     for( i = 0 ; i < lMillisecond / 30 ; i++ )
     {
         kWaitUsingDirectPIT( MSTOCOUNT( 30 ) );
     }
-    kWaitUsingDirectPIT( MSTOCOUNT( lMillisecond % 30 ) );
+    kWaitUsingDirectPIT( MSTOCOUNT( lMillisecond % 30 ) );   
     kEnableInterrupt();
     kPrintf( "%d ms Sleep Complete\n", lMillisecond );
-
+    
     // 타이머 복원
     kInitializePIT( MSTOCOUNT( 1 ), TRUE );
 }
 
-
 /**
-
- *  타임 스탬프 카운터를 읽음
-
+ *  타임 스탬프 카운터를 읽음  
  */
-
 void kReadTimeStampCounter( const char* pcParameterBuffer )
 {
     QWORD qwTSC;
-
+    
     qwTSC = kReadTSC();
     kPrintf( "Time Stamp Counter = %q\n", qwTSC );
 }
 
-
 /**
-
- * 프로세서의 속도를 측정
-
+ *  프로세서의 속도를 측정
  */
-
 void kMeasureProcessorSpeed( const char* pcParameterBuffer )
 {
     int i;
     QWORD qwLastTSC, qwTotalTSC = 0;
-
+        
     kPrintf( "Now Measuring." );
-
+    
     // 10초 동안 변화한 타임 스탬프 카운터를 이용하여 프로세서의 속도를 간접적으로 측정
-    kDisableInterrupt();
+    kDisableInterrupt();    
     for( i = 0 ; i < 200 ; i++ )
     {
         qwLastTSC = kReadTSC();
@@ -407,19 +397,15 @@ void kMeasureProcessorSpeed( const char* pcParameterBuffer )
         kPrintf( "." );
     }
     // 타이머 복원
-    kInitializePIT( MSTOCOUNT( 1 ), TRUE );
+    kInitializePIT( MSTOCOUNT( 1 ), TRUE );    
     kEnableInterrupt();
-
+    
     kPrintf( "\nCPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000 );
 }
 
-
 /**
-
- *  RTC 컨트롤러에 저장된 일자 및 시간 정보 표시
-
+ *  RTC 컨트롤러에 저장된 일자 및 시간 정보를 표시
  */
-
 void kShowDateAndTime( const char* pcParameterBuffer )
 {
     BYTE bSecond, bMinute, bHour;
@@ -429,53 +415,148 @@ void kShowDateAndTime( const char* pcParameterBuffer )
     // RTC 컨트롤러에서 시간 및 일자를 읽음
     kReadRTCTime( &bHour, &bMinute, &bSecond );
     kReadRTCDate( &wYear, &bMonth, &bDayOfMonth, &bDayOfWeek );
-
-
-    kPrintf( "Date: %d/%d/%d %s, ", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString( bDayOfWeek ) );
+    
+    kPrintf( "Date: %d/%d/%d %s, ", wYear, bMonth, bDayOfMonth,
+             kConvertDayOfWeekToString( bDayOfWeek ) );
     kPrintf( "Time: %d:%d:%d\n", bHour, bMinute, bSecond );
 }
 
-// TCB 자료구조와 스택 정의
-static TCB gs_vstTask[ 2 ] = { 0, };
-static QWORD gs_vstStack[ 1024 ] = { 0, };
-
-// 태스크 전환을 테스트하는 태스크
-void kTestTask( void )
+/**
+ *  태스크 1
+ *      화면 테두리를 돌면서 문자를 출력
+ */
+void kTestTask1( void )
 {
-	int i = 0;
-
-	while( 1 )
-	{
-		// 메시지를 출력하고 키 입력을 대기
-		kPrintf( "[%d] This message is from kTestTask. Press any key to switch " "kConsoleShell~!!\n", i++ );
-		kGetCh();
-
-		// 위에서 키가 입력되면 태스크를 전환
-		 kSwitchContext( &( gs_vstTask[ 1 ].stContext ), &( gs_vstTask[ 0 ].stContext ) );
-	}
-}
-
-// 태스크를 생성해서 멀티태스킹 수행
-void kCreateTestTask( const char* pcParameterBuffer )
-{
-    KEYDATA stData;
-    int i = 0;
-
-    // 태스크 설정
-    kSetUpTask( &( gs_vstTask[ 1 ] ), 1, 0, ( QWORD ) kTestTask, &( gs_vstStack ),
-                sizeof( gs_vstStack ) );
-
-    // q 키가 입력되지 않을 때까지 수행
+    BYTE bData;
+    int i = 0, iX = 0, iY = 0, iMargin;
+    CHARACTER* pstScreen = ( CHARACTER* ) CONSOLE_VIDEOMEMORYADDRESS;
+    TCB* pstRunningTask;
+    
+    // 자신의 ID를 얻어서 화면 오프셋으로 사용
+    pstRunningTask = kGetRunningTask();
+    iMargin = ( pstRunningTask->stLink.qwID & 0xFFFFFFFF ) % 10;
+    
+    // 화면 네 귀퉁이를 돌면서 문자 출력
     while( 1 )
     {
-        // 메시지를 출력하고 키 입력을 대기
-        kPrintf( "[%d] This message is from kConsoleShell. Press any key to "
-                 "switch TestTask~!!\n", i++ );
-        if( kGetCh() == 'q' )
+        switch( i )
         {
+        case 0:
+            iX++;
+            if( iX >= ( CONSOLE_WIDTH - iMargin ) )
+            {
+                i = 1;
+            }
+            break;
+            
+        case 1:
+            iY++;
+            if( iY >= ( CONSOLE_HEIGHT - iMargin ) )
+            {
+                i = 2;
+            }
+            break;
+            
+        case 2:
+            iX--;
+            if( iX < iMargin )
+            {
+                i = 3;
+            }
+            break;
+            
+        case 3:
+            iY--;
+            if( iY < iMargin )
+            {
+                i = 0;
+            }
             break;
         }
-        // 위에서 키가 입력되면 태스크를 전환
-        kSwitchContext( &( gs_vstTask[ 0 ].stContext ), &( gs_vstTask[ 1 ].stContext ) );
+        
+        // 문자 및 색깔 지정
+        pstScreen[ iY * CONSOLE_WIDTH + iX ].bCharactor = bData;
+        pstScreen[ iY * CONSOLE_WIDTH + iX ].bAttribute = bData & 0x0F;
+        bData++;
+        
+        // 다른 태스크로 전환
+        kSchedule();
     }
 }
+
+/**
+ *  태스크 2
+ *      자신의 ID를 참고하여 특정 위치에 회전하는 바람개비를 출력
+ */
+void kTestTask2( void )
+{
+    int i = 0, iOffset;
+    CHARACTER* pstScreen = ( CHARACTER* ) CONSOLE_VIDEOMEMORYADDRESS;
+    TCB* pstRunningTask;
+    char vcData[ 4 ] = { '-', '\\', '|', '/' };
+    
+    // 자신의 ID를 얻어서 화면 오프셋으로 사용
+    pstRunningTask = kGetRunningTask();
+    iOffset = ( pstRunningTask->stLink.qwID & 0xFFFFFFFF ) * 2;
+    iOffset = CONSOLE_WIDTH * CONSOLE_HEIGHT - 
+        ( iOffset % ( CONSOLE_WIDTH * CONSOLE_HEIGHT ) );
+
+    while( 1 )
+    {
+        // 회전하는 바람개비를 표시
+        pstScreen[ iOffset ].bCharactor = vcData[ i % 4 ];
+        // 색깔 지정
+        pstScreen[ iOffset ].bAttribute = ( iOffset % 15 ) + 1;
+        i++;
+        
+        // 다른 태스크로 전환
+        kSchedule();
+    }
+}
+
+/**
+ *  태스크를 생성해서 멀티 태스킹 수행
+ */
+void kCreateTestTask( const char* pcParameterBuffer )
+{
+    PARAMETERLIST stList;
+    char vcType[ 30 ];
+    char vcCount[ 30 ];
+    int i;
+    
+    // 파라미터를 추출
+    kInitializeParameter( &stList, pcParameterBuffer );
+    kGetNextParameter( &stList, vcType );
+    kGetNextParameter( &stList, vcCount );
+
+    switch( kAToI( vcType, 10 ) )
+    {
+    // 타입 1 태스크 생성
+    case 1:
+        for( i = 0 ; i < kAToI( vcCount, 10 ) ; i++ )
+        {    
+            if( kCreateTask( 0, ( QWORD ) kTestTask1 ) == NULL )
+            {
+                break;
+            }
+        }
+        
+        kPrintf( "Task1 %d Created\n", i );
+        break;
+        
+    // 타입 2 태스크 생성
+    case 2:
+    default:
+        for( i = 0 ; i < kAToI( vcCount, 10 ) ; i++ )
+        {    
+            if( kCreateTask( 0, ( QWORD ) kTestTask2 ) == NULL )
+            {
+                break;
+            }
+        }
+        
+        kPrintf( "Task2 %d Created\n", i );
+        break;
+    }    
+}   
+ 

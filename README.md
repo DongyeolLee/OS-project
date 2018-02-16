@@ -15,3 +15,5 @@
 - 콘솔 셸을 만들자 - (https://dongyeollee.github.io/2018/01/31/MakeAConsoleShell/)
 - 타이머 디바이스 드라이버를 추가하자 - (https://dongyeollee.github.io/2018/02/02/AddTimerDeviceDriver/)
 - 태스크 개념을 추가해 멀티태스킹을 구현하자 - (https://dongyeollee.github.io/2018/02/05/AddBasicMultiTasking/)
+- 라운드 로빈 스케줄러를 추가하자 - (https://dongyeollee.github.io/2018/02/06/AddRoundRobinScheduler/)
+- 멀티레벨 큐 스케줄러로 업그레이드하고 태스크 종료 기능을 추가하자 - (https://dongyeollee.github.io/2018/02/14/AddMultilevelQueue/)
